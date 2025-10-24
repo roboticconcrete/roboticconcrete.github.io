@@ -142,15 +142,70 @@ p {
 }
 
 .logo {
-    font-family: var(--font-primary);
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--charcoal);
+    display: flex;
+    align-items: center;
 }
 
-.logo-cc {
-    color: var(--primary-slate);
-    font-weight: 800;
+.logo-composite {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.logo-wordmark {
+    top: 50%;
+    transform: translate(0, 20%);
+    height: 40px;
+    width: auto;
+    max-width: 200px;
+}
+
+.logo-cc-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-68%, -50%);
+    height: 60px;
+    width: 60px;
+    z-index: 100;
+}
+
+.logo-svg {
+    height: 40px;
+    width: auto;
+    max-width: 200px;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.footer-logo-composite {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.footer-logo-wordmark {
+    top: 50%;
+    transform: translate(0, 20%);
+    height: 35px;
+    width: auto;
+    max-width: 180px;
+    filter: brightness(0) invert(1); /* Make white for dark footer */
+}
+
+.footer-logo-cc-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-68%, -50%);
+    height: 50px;
+    width: 50px;
+    z-index: 100;
+    filter: brightness(0) invert(1); /* Make white for dark footer */
 }
 
 .nav-menu {
@@ -456,6 +511,48 @@ p {
     font-weight: bold;
 }
 
+/* Coming Soon Service Card */
+.service-card.coming-soon {
+    position: relative;
+    opacity: 0.9;
+    border: 2px dashed var(--medium-gray);
+}
+
+.coming-soon-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: linear-gradient(135deg, var(--accent-orange), #ea580c);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+}
+
+.service-card.coming-soon:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-orange);
+}
+
+.service-card.coming-soon .service-icon {
+    opacity: 0.8;
+}
+
+.service-card.coming-soon h3 {
+    color: var(--light-slate);
+}
+
+.service-card.coming-soon p {
+    color: var(--light-slate);
+    font-style: italic;
+}
+
 /* Partners Section */
 .partners {
     padding: var(--section-padding);
@@ -614,6 +711,36 @@ p {
 .portfolio-overlay p {
     margin-bottom: 0;
     font-size: 0.9rem;
+}
+
+/* Coming Soon Portfolio Item */
+.portfolio-item.coming-soon {
+    position: relative;
+    opacity: 0.8;
+}
+
+.coming-soon-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, var(--accent-orange), #ea580c);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: var(--shadow-md);
+    z-index: 20;
+}
+
+.portfolio-item.coming-soon .placeholder-image {
+    opacity: 0.7;
+}
+
+.portfolio-item.coming-soon .portfolio-overlay {
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
 }
 
 .portfolio-cta {
