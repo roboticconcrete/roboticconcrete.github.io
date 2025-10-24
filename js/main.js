@@ -4,6 +4,8 @@
 const CONFIG = {
     apiEndpoint: 'https://api.roboticconcrete.com/contact', // Replace with actual API endpoint
     bearerToken: 'your-bearer-token-here', // Replace with actual Bearer token
+    chatEndpoint: 'https://api.roboticconcrete.com/chat', // Replace with your Azure OpenAI endpoint
+    chatBearerToken: 'your-chat-bearer-token-here', // Replace with your chat API token
     animationOffset: 100,
     scrollDuration: 800
 };
@@ -16,7 +18,17 @@ const elements = {
     contactForm: document.getElementById('contact-form'),
     formMessage: document.getElementById('form-message'),
     portfolioItems: document.querySelectorAll('.portfolio-item'),
-    header: document.querySelector('.header')
+    header: document.querySelector('.header'),
+    // Chat elements
+    chatToggle: document.getElementById('chat-toggle'),
+    chatToggleFloat: document.getElementById('chat-toggle-float'),
+    chatWidget: document.getElementById('chat-widget'),
+    chatClose: document.getElementById('chat-close'),
+    chatMessages: document.getElementById('chat-messages'),
+    chatInput: document.getElementById('chat-input'),
+    chatSend: document.getElementById('chat-send'),
+    chatTyping: document.getElementById('chat-typing'),
+    chatBadge: document.getElementById('chat-badge')
 };
 
 // Initialize the application
@@ -27,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAnimations();
     initializePortfolio();
     initializeHeaderScroll();
+    initializeChat();
 });
 
 // Navigation functionality
@@ -331,11 +344,191 @@ if (mainContainer) {
     resizeObserver.observe(mainContainer);
 }
 
+// Chat functionality
+function initializeChat() {
+    // Chat toggle functionality
+    if (elements.chatToggle) {
+        elements.chatToggle.addEventListener('click', toggleChat);
+    }
+    
+    if (elements.chatToggleFloat) {
+        elements.chatToggleFloat.addEventListener('click', toggleChat);
+    }
+    
+    if (elements.chatClose) {
+        elements.chatClose.addEventListener('click', closeChat);
+    }
+    
+    // Chat input handling
+    if (elements.chatInput) {
+        elements.chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+    
+    if (elements.chatSend) {
+        elements.chatSend.addEventListener('click', sendMessage);
+    }
+    
+    // Hide floating button when chat is open
+    if (elements.chatWidget) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    if (elements.chatWidget.classList.contains('active')) {
+                        elements.chatToggleFloat.style.display = 'none';
+                    } else {
+                        elements.chatToggleFloat.style.display = 'flex';
+                    }
+                }
+            });
+        });
+        observer.observe(elements.chatWidget, { attributes: true });
+    }
+}
+
+function toggleChat() {
+    if (elements.chatWidget) {
+        elements.chatWidget.classList.toggle('active');
+        if (elements.chatWidget.classList.contains('active')) {
+            elements.chatInput.focus();
+            hideChatBadge();
+        }
+    }
+}
+
+function closeChat() {
+    if (elements.chatWidget) {
+        elements.chatWidget.classList.remove('active');
+    }
+}
+
+function sendMessage() {
+    const message = elements.chatInput.value.trim();
+    if (!message) return;
+    
+    // Add user message to chat
+    addMessage(message, 'user');
+    elements.chatInput.value = '';
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    // Send to Azure OpenAI
+    sendToChatAPI(message);
+}
+
+function addMessage(content, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message`;
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    
+    if (sender === 'user') {
+        avatar.textContent = '👤';
+    } else {
+        // Use CeeCee's image for bot messages
+        const ceeceeImg = document.createElement('img');
+        ceeceeImg.src = 'images/CeeCee.png';
+        ceeceeImg.alt = 'CeeCee';
+        ceeceeImg.className = 'ceecee-message-avatar';
+        avatar.appendChild(ceeceeImg);
+    }
+    
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    messageContent.innerHTML = `<p>${content}</p>`;
+    
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(messageContent);
+    
+    elements.chatMessages.appendChild(messageDiv);
+    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+}
+
+function showTypingIndicator() {
+    elements.chatTyping.style.display = 'flex';
+    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+}
+
+function hideTypingIndicator() {
+    elements.chatTyping.style.display = 'none';
+}
+
+function showChatBadge() {
+    if (elements.chatBadge) {
+        elements.chatBadge.style.display = 'flex';
+    }
+}
+
+function hideChatBadge() {
+    if (elements.chatBadge) {
+        elements.chatBadge.style.display = 'none';
+    }
+}
+
+async function sendToChatAPI(message) {
+    try {
+        const response = await fetch(CONFIG.chatEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${CONFIG.chatBearerToken}`
+            },
+            body: JSON.stringify({
+                message: message,
+                context: '3d_concrete_printing',
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            hideTypingIndicator();
+            addMessage(data.response, 'bot');
+        } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Chat API error:', error);
+        hideTypingIndicator();
+        addMessage('Sorry, I\'m having trouble connecting right now. Please try again later or contact us directly.', 'bot');
+    }
+}
+
+// Fallback responses for when API is not available
+const fallbackResponses = {
+    'hello': 'Hello! I\'m CeeCee, your 3D concrete printing assistant. How can I help you today?',
+    'services': 'We offer hardscapes, outbuildings, custom fireplaces, outdoor kitchens, and outdoor signs. We also have homes coming soon!',
+    'technology': 'Our 3D concrete printing technology uses computer-controlled robotic systems to create complex architectural forms with precision and speed.',
+    'partnership': 'We offer comprehensive partnership opportunities including training, co-marketing, and technical support. Contact us to learn more!',
+    'pricing': 'Pricing varies based on project complexity and materials. Contact us for a free consultation and quote.',
+    'contact': 'You can reach us at (555) 123-4567 or partners@roboticconcrete.com. We serve the Greater Boston area.'
+};
+
+function getFallbackResponse(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    for (const [key, response] of Object.entries(fallbackResponses)) {
+        if (lowerMessage.includes(key)) {
+            return response;
+        }
+    }
+    
+    return 'That\'s a great question! I\'d be happy to connect you with our team for more detailed information. Would you like to schedule a consultation?';
+}
+
 // Export functions for testing (if needed)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         validateForm,
         showFormMessage,
-        CONFIG
+        CONFIG,
+        toggleChat,
+        sendMessage,
+        addMessage
     };
 }
