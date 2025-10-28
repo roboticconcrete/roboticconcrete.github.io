@@ -7,7 +7,13 @@ const CONFIG = {
     chatEndpoint: 'https://api.roboticconcrete.com/chat', // Replace with your Azure OpenAI endpoint
     chatBearerToken: 'your-chat-bearer-token-here', // Replace with your chat API token
     animationOffset: 100,
-    scrollDuration: 800
+    scrollDuration: 800,
+    // Google Workspace Integration
+    googleCalendarId: 'V4M7HuzV4bTdV3gb7', // Replace with your Google Calendar ID
+    googleMeetLink: 'https://meet.google.com/your-meeting-code', // Replace with your Google Meet link
+    googleDrivePortfolioId: 'your-drive-folder-id', // Replace with your Google Drive folder ID
+    googleMapsApiKey: 'your-google-maps-api-key', // Replace with your Google Maps API key
+    googleAnalyticsId: 'G-D9PSB6WJN9' // Replace with your GA4 measurement ID
 };
 
 // DOM Elements
@@ -28,7 +34,14 @@ const elements = {
     chatInput: document.getElementById('chat-input'),
     chatSend: document.getElementById('chat-send'),
     chatTyping: document.getElementById('chat-typing'),
-    chatBadge: document.getElementById('chat-badge')
+    chatBadge: document.getElementById('chat-badge'),
+    // Google Workspace Integration Elements
+    contactTypeSelect: document.getElementById('contact-type'),
+    calendarBookingSection: document.getElementById('calendar-booking-section'),
+    bookConsultationBtn: document.getElementById('book-consultation-btn'),
+    startMeetBtn: document.getElementById('start-meet-btn'),
+    viewMapBtn: document.getElementById('view-map-btn'),
+    sharePortfolioBtn: document.getElementById('share-portfolio-btn')
 };
 
 // Initialize the application
@@ -40,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePortfolio();
     initializeHeaderScroll();
     initializeChat();
+    initializeGoogleWorkspace();
 });
 
 // Navigation functionality
@@ -521,6 +535,133 @@ function getFallbackResponse(message) {
     return 'That\'s a great question! I\'d be happy to connect you with our team for more detailed information. Would you like to schedule a consultation?';
 }
 
+// Google Workspace Integration Functions
+function initializeGoogleWorkspace() {
+    // Contact type change handler
+    if (elements.contactTypeSelect) {
+        elements.contactTypeSelect.addEventListener('change', function() {
+            if (this.value === 'consultation' && elements.calendarBookingSection) {
+                elements.calendarBookingSection.style.display = 'block';
+            } else if (elements.calendarBookingSection) {
+                elements.calendarBookingSection.style.display = 'none';
+            }
+        });
+    }
+    
+    // Google Calendar booking
+    if (elements.bookConsultationBtn) {
+        elements.bookConsultationBtn.addEventListener('click', openGoogleCalendar);
+    }
+    
+    // Google Meet integration
+    if (elements.startMeetBtn) {
+        elements.startMeetBtn.addEventListener('click', startGoogleMeet);
+    }
+    
+    // Google Maps integration
+    if (elements.viewMapBtn) {
+        elements.viewMapBtn.addEventListener('click', openGoogleMaps);
+    }
+    
+    // Google Drive portfolio sharing
+    if (elements.sharePortfolioBtn) {
+        elements.sharePortfolioBtn.addEventListener('click', sharePortfolioFolder);
+    }
+}
+
+// Google Calendar Integration
+function openGoogleCalendar() {
+    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Robotic Concrete Consultation&dates=20250101T090000Z/20250101T100000Z&details=Free consultation for 3D concrete printing project&location=Virtual Meeting`;
+    
+    // Track calendar booking attempt
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'calendar_booking_click', {
+            event_category: 'engagement',
+            event_label: 'consultation_booking'
+        });
+    }
+    
+    window.open(calendarUrl, '_blank');
+}
+
+// Google Meet Integration
+function startGoogleMeet() {
+    // Track Meet button click
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'meet_button_click', {
+            event_category: 'engagement',
+            event_label: 'virtual_consultation'
+        });
+    }
+    
+    // Open Google Meet link
+    window.open(CONFIG.googleMeetLink, '_blank');
+}
+
+// Google Maps Integration
+function openGoogleMaps() {
+    const serviceAreas = [
+        'Beverly MA', 'Salem MA', 'Danvers MA', 'Peabody MA', 'Gloucester MA',
+        'Newburyport MA', 'Ipswich MA', 'Marblehead MA', 'Lynnfield MA', 'Andover MA'
+    ];
+    
+    // Create a map showing service areas
+    const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=Beverly+MA&waypoints=${serviceAreas.join('|')}`;
+    
+    // Track map view
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'map_view_click', {
+            event_category: 'engagement',
+            event_label: 'service_areas'
+        });
+    }
+    
+    window.open(mapUrl, '_blank');
+}
+
+// Google Drive Integration
+function sharePortfolioFolder() {
+    const driveUrl = `https://drive.google.com/drive/folders/${CONFIG.googleDrivePortfolioId}`;
+    
+    // Track portfolio sharing
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'portfolio_share_click', {
+            event_category: 'engagement',
+            event_label: 'portfolio_sharing'
+        });
+    }
+    
+    window.open(driveUrl, '_blank');
+}
+
+// Enhanced form submission with Google Workspace integration
+function enhanceFormSubmission(formData) {
+    // Track form submission
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'form_submission', {
+            event_category: 'lead_generation',
+            event_label: formData.contact_type || 'general_inquiry'
+        });
+    }
+    
+    // If consultation is selected, also trigger calendar booking
+    if (formData.contact_type === 'consultation') {
+        setTimeout(() => {
+            openGoogleCalendar();
+        }, 2000); // Wait 2 seconds after form submission
+    }
+}
+
+// Google Analytics Enhanced Events
+function trackGoogleWorkspaceEngagement(action, label) {
+    if (typeof gtag !== 'undefined') {
+        gtag('event', action, {
+            event_category: 'google_workspace',
+            event_label: label
+        });
+    }
+}
+
 // Export functions for testing (if needed)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -529,6 +670,10 @@ if (typeof module !== 'undefined' && module.exports) {
         CONFIG,
         toggleChat,
         sendMessage,
-        addMessage
+        addMessage,
+        openGoogleCalendar,
+        startGoogleMeet,
+        openGoogleMaps,
+        sharePortfolioFolder
     };
 }
